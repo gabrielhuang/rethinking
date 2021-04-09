@@ -50,7 +50,7 @@ class MyStandardRPNHead(nn.Module):
         if sync_bn:
             SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
         else:
-            SyncBN = nn.BatchNorm1d
+            SyncBN = nn.BatchNorm2d
 
         self.obj_bn_list = nn.ModuleList(
             [nn.ModuleList([SyncBN(in_channels) for i in range(num_conv)]) for j in range(pyramid_levels)])
