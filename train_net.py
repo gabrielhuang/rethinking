@@ -210,8 +210,8 @@ class Trainer(DefaultTrainer):
         #self._detect_anomaly(losses, loss_dict)  # removed with new detectron2
 
         metrics_dict = loss_dict
-        metrics_dict["data_time"] = data_time
-        self._write_metrics(metrics_dict)
+        #metrics_dict["data_time"] = data_time
+        self._trainer._write_metrics(metrics_dict, data_time)
 
         self.optimizer.zero_grad()
         losses.backward()
