@@ -14,7 +14,7 @@ DATASETS:
   TEST: ('voc_2007_test',)
 SOLVER:
   STEPS: (12000, 16000)
-  MAX_ITER: 18000  # 17.4 epochs
+  MAX_ITER: 18000  # 17.4 epochs  # this is with batch size 16
   WARMUP_ITERS: 100
 DATALOADER:
   # proposals are part of the dataset_dicts, and take a lot of RAM

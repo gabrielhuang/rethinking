@@ -1,0 +1,15 @@
+_BASE_: "pascal.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_resnet_myfpn_backbone"  # there are several choices inside myfpn.py 
+    # build_resnet_myfpn_backbone, build_resnet_myfpn_backbone_v2
+    # build_resnet_mybifpn_backbone, build_resnet_mybifpn_backbone_v2, 
+    # build_resnet_myfpn_backbone_p4
+  ROI_HEADS:
+    NAME: "TransformerROIHeads"
+    IN_FEATURES: ["p2", "p3", "p4", "p5"]
+  ROI_BOX_HEAD:
+    NAME: "MyFastRCNNTransformerHead"
+  RPN:
+    HEAD_NAME: "MyStandardRPNHead"
+    SYNC_BN: false
