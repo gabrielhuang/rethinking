@@ -34,7 +34,7 @@ import detectron2.utils.comm as comm
 from torch.nn.parallel import DistributedDataParallel
 from detectron2.modeling.meta_arch import GeneralizedRCNN
 from detectron2.modeling import GeneralizedRCNNWithTTA, DatasetMapperTTA
-from troi.my_fast_rcnn_output import fast_rcnn_inference_single_image
+from tsp_rcnn.my_fast_rcnn_output import fast_rcnn_inference_single_image
 
 class HybridOptimizer(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, dampening=0, betas=(0.9, 0.999), eps=1e-8, weight_decay=1e-4):
@@ -180,7 +180,8 @@ class Trainer(DefaultTrainer):
             model = DistributedDataParallel(
                 model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
             )
-        super(DefaultTrainer, self).__init__(model, data_loader, optimizer)
+        #super(DefaultTrainer, self).__init__(model, data_loader, optimizer)
+        DefaultTrainer.__init__(self, cfg)  # Oct 28 2020 commit, detectron2's DefaultTrainer switched from inheriting to composing simpletrainer
 
         self.scheduler = self.build_lr_scheduler(cfg, optimizer)
         # Assume no other objects need to be checkpointed.
@@ -201,12 +202,12 @@ class Trainer(DefaultTrainer):
     def run_step(self):
         assert self.model.training, "[Trainer] model was changed to eval mode!"
         start = time.perf_counter()
-        data = next(self._data_loader_iter)
+        data = next(self._trainer._data_loader_iter)
         data_time = time.perf_counter() - start
 
         loss_dict = self.model(data)
         losses = sum(loss_dict.values())
-        self._detect_anomaly(losses, loss_dict)
+        #self._detect_anomaly(losses, loss_dict)  # removed with new detectron2
 
         metrics_dict = loss_dict
         metrics_dict["data_time"] = data_time
