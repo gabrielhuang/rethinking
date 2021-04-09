@@ -166,38 +166,7 @@ class Trainer(DefaultTrainer):
             if cfg.SOLVER.CLIP_GRADIENTS.CLIP_TYPE == "full_model":
                 self.clip_norm_val = cfg.SOLVER.CLIP_GRADIENTS.CLIP_VALUE
 
-        logger = logging.getLogger("detectron2")
-        if not logger.isEnabledFor(logging.INFO):  # setup_logger is not called for d2
-            setup_logger()
-        cfg = DefaultTrainer.auto_scale_workers(cfg, comm.get_world_size())
-        # Assume these objects must be constructed in this order.
-        model = self.build_model(cfg)
-        optimizer = self.build_optimizer(cfg, model)
-        data_loader = self.build_train_loader(cfg)
-
-        # For training, wrap with DDP. But don't need this for inference.
-        if comm.get_world_size() > 1:
-            model = DistributedDataParallel(
-                model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
-            )
-        #super(DefaultTrainer, self).__init__(model, data_loader, optimizer)
-        DefaultTrainer.__init__(self, cfg)  # Oct 28 2020 commit, detectron2's DefaultTrainer switched from inheriting to composing simpletrainer
-
-        self.scheduler = self.build_lr_scheduler(cfg, optimizer)
-        # Assume no other objects need to be checkpointed.
-        # We can later make it checkpoint the stateful hooks
-        self.checkpointer = AdetCheckpointer(
-            # Assume you want to save checkpoints together with logs/statistics
-            model,
-            cfg.OUTPUT_DIR,
-            optimizer=optimizer,
-            scheduler=self.scheduler,
-        )
-        self.start_iter = 0
-        self.max_iter = cfg.SOLVER.MAX_ITER
-        self.cfg = cfg
-
-        self.register_hooks(self.build_hooks())
+        DefaultTrainer.__init__(self, cfg)
 
     def run_step(self):
         assert self.model.training, "[Trainer] model was changed to eval mode!"
@@ -295,30 +264,6 @@ class Trainer(DefaultTrainer):
         if not cfg.SOLVER.CLIP_GRADIENTS.CLIP_TYPE == "full_model":
             optimizer = maybe_add_gradient_clipping(cfg, optimizer)
         return optimizer
-
-    def resume_or_load(self, resume=True):
-        """
-        If `resume==True`, and last checkpoint exists, resume from it, load all checkpointables
-        (eg. optimizer and scheduler) and update iteration counter.
-        Otherwise, load the model specified by the config (skip all checkpointables) and start from
-        the first iteration.
-        Args:
-            resume (bool): whether to do resume or not
-        """
-        path = self.cfg.MODEL.WEIGHTS
-        if resume and self.checkpointer.has_checkpoint():
-            path = self.checkpointer.get_checkpoint_file()
-            checkpointables = [key for key in self.checkpointer.checkpointables.keys() if key != "scheduler"]
-            checkpoint = self.checkpointer.load(path, checkpointables=checkpointables)
-            for i in range(checkpoint.get("iteration", -1) + 1):
-                self.checkpointer.checkpointables["scheduler"].step()
-        else:
-            checkpoint = self.checkpointer.load(path, checkpointables=[])
-
-        if resume and self.checkpointer.has_checkpoint():
-            self.start_iter = checkpoint.get("iteration", -1) + 1
-            # The checkpoint stores the training iteration that just finished, thus we start
-            # at the next iteration (or iter zero if there's no checkpoint).
 
     @classmethod
     def build_train_loader(cls, cfg):
