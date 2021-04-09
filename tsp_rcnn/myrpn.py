@@ -27,7 +27,7 @@ class MyStandardRPNHead(nn.Module):
 
     @configurable
     def __init__(self, *, in_channels: int, num_anchors: int, box_dim: int = 4,
-                 num_conv: int = 1, pyramid_levels: int = 1):
+                 num_conv: int = 1, pyramid_levels: int = 1, sync_bn: bool =True):
         """
         NOTE: this interface is experimental.
         Args:
@@ -47,7 +47,10 @@ class MyStandardRPNHead(nn.Module):
         self.anchor_conv = nn.ModuleList(
             [MyConvBlock(in_channels, in_channels, norm=False, activation=False) for _ in range(num_conv)])
 
-        SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
+        if sync_bn:
+            SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
+        else:
+            SyncBN = nn.BatchNorm1d
 
         self.obj_bn_list = nn.ModuleList(
             [nn.ModuleList([SyncBN(in_channels) for i in range(num_conv)]) for j in range(pyramid_levels)])
@@ -75,6 +78,7 @@ class MyStandardRPNHead(nn.Module):
         anchor_generator = build_anchor_generator(cfg, input_shape)
         num_anchors = anchor_generator.num_anchors
         box_dim = anchor_generator.box_dim
+        sync_bn = cfg.MODEL.RPN.SYNC_BN
         assert (
             len(set(num_anchors)) == 1
         ), "Each level must have the same number of anchors per spatial position"
@@ -82,7 +86,8 @@ class MyStandardRPNHead(nn.Module):
                 "num_anchors": num_anchors[0],
                 "box_dim": box_dim,
                 "num_conv": cfg.MODEL.RPN.NUM_CONV,
-                "pyramid_levels": len(input_shape)}
+                "pyramid_levels": len(input_shape),
+                "sync_bn": sync_bn}
 
     def forward(self, features: List[torch.Tensor]):
         """

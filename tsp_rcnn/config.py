@@ -7,6 +7,8 @@ def add_troi_config(cfg):
     """
     Add config for Transformer-ROI.
     """
+    cfg.MODEL.RPN.SYNC_BN = True
+
     cfg.MODEL.RPN.NUM_CONV = 1
     cfg.MODEL.FPN.NUM_REPEATS = 2
 
