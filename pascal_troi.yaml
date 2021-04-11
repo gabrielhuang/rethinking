@@ -1,15 +1,32 @@
-_BASE_: "pascal.yaml"
+_BASE_: "RCNN-FPN-TROI-DEC-1x.yaml"
 MODEL:
   BACKBONE:
-    NAME: "build_resnet_myfpn_backbone"  # there are several choices inside myfpn.py 
-    # build_resnet_myfpn_backbone, build_resnet_myfpn_backbone_v2
-    # build_resnet_mybifpn_backbone, build_resnet_mybifpn_backbone_v2, 
-    # build_resnet_myfpn_backbone_p4
-  ROI_HEADS:
-    NAME: "TransformerROIHeads"
-    IN_FEATURES: ["p2", "p3", "p4", "p5"]
-  ROI_BOX_HEAD:
-    NAME: "MyFastRCNNTransformerHead"
+    NAME: "build_resnet_myfpn_backbone_v2"
+  ANCHOR_GENERATOR:
+    SIZES: [[32, 40.32, 51.80], [64, 80.63, 101.59], [128, 161.27, 203.19], [256, 322.54, 406.37], [512, 645.08, 812.75]]
   RPN:
+    IN_FEATURES: ["p3", "p4", "p5", "p6", "p7"]
     HEAD_NAME: "MyStandardRPNHead"
-    SYNC_BN: false
+    NUM_CONV: 2
+    BBOX_REG_LOSS_WEIGHT: 2.0
+    POST_NMS_TOPK_TRAIN: 800
+    POST_NMS_TOPK_TEST: 800
+  ROI_BOX_HEAD:
+    RANDOM_PROPOSAL_DROP: True
+    RANDOM_PROPOSAL_DROP_LOWER_BOUND: 0.7
+    USE_OBJ_LOSS: True
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 800
+    NMS_THRESH_TEST: 0.7
+  MY_ROI_BOX_HEAD:
+    NUM_FC: 1
+    DIM_FEEDFORWARD: 2048
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.01
+  TRANSFORMER_MULTIPLIER: 0.003
+  STEPS: (12000, 16000)  # this was for batch size 32
+  MAX_ITER: 18000
+DATASETS:
+  TRAIN: ('voc_2007_trainval', 'voc_2012_trainval')
+  TEST: ('voc_2007_test',)

@@ -1,0 +1,18 @@
+_BASE_: "Base-RCNN-FPN-TROI.yaml"
+MODEL:
+  WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+  MASK_ON: False
+  BACKBONE:
+    NAME: "build_resnet_myfpn_backbone"
+  RESNETS:
+    DEPTH: 50
+  ROI_BOX_HEAD:
+    BBOX_REG_LOSS_TYPE: "smooth_l1+giou"
+  MY_ROI_BOX_HEAD:
+    USE_POSITION_ENCODING: True
+SOLVER:
+  IMS_PER_BATCH: 16
+  BASE_LR: 0.02
+  TRANSFORMER_MULTIPLIER: 0.005
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
