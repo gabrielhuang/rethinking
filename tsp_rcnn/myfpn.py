@@ -368,12 +368,12 @@ class LastLevelMaxPoolV2(nn.Module):
     P6 feature from P5.
     """
 
-    def __init__(self, channels):
+    def __init__(self, channels, sync_bn=True):
         super().__init__()
         self.num_levels = 2
         self.in_feature = "p5"
-        self.p6 = MyConvBlock(channels, channels, stride=2)
-        self.p7 = MyConvBlock(channels, channels, stride=2)
+        self.p6 = MyConvBlock(channels, channels, stride=2, sync_bn=sync_bn)
+        self.p7 = MyConvBlock(channels, channels, stride=2, sync_bn=sync_bn)
 
     def forward(self, x):
         x1 = self.p6(x)
@@ -397,7 +397,7 @@ def build_resnet_myfpn_backbone_v2(cfg, input_shape: ShapeSpec):
         in_features=in_features,
         out_channels=out_channels,
         norm=cfg.MODEL.FPN.NORM,
-        top_block=LastLevelMaxPoolV2(out_channels),
+        top_block=LastLevelMaxPoolV2(out_channels, sync_bn=cfg.MODEL.SYNC_BN),
         fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
     )
     return backbone

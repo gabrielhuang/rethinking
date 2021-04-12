@@ -43,9 +43,9 @@ class MyStandardRPNHead(nn.Module):
         super().__init__()
         # 3x3 conv for the hidden representation
         self.obj_conv = nn.ModuleList(
-            [MyConvBlock(in_channels, in_channels, norm=False, activation=False) for _ in range(num_conv)])
+            [MyConvBlock(in_channels, in_channels, norm=False, activation=False, sync_bn=sync_bn) for _ in range(num_conv)])
         self.anchor_conv = nn.ModuleList(
-            [MyConvBlock(in_channels, in_channels, norm=False, activation=False) for _ in range(num_conv)])
+            [MyConvBlock(in_channels, in_channels, norm=False, activation=False, sync_bn=sync_bn) for _ in range(num_conv)])
 
         if sync_bn:
             SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
@@ -78,7 +78,7 @@ class MyStandardRPNHead(nn.Module):
         anchor_generator = build_anchor_generator(cfg, input_shape)
         num_anchors = anchor_generator.num_anchors
         box_dim = anchor_generator.box_dim
-        sync_bn = cfg.MODEL.RPN.SYNC_BN
+        sync_bn = cfg.MODEL.SYNC_BN
         assert (
             len(set(num_anchors)) == 1
         ), "Each level must have the same number of anchors per spatial position"

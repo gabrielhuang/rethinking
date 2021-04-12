@@ -21,6 +21,7 @@ MODEL:
   MY_ROI_BOX_HEAD:
     NUM_FC: 1
     DIM_FEEDFORWARD: 2048
+  SYNC_BN: False  # because single GPU
 SOLVER:
   IMS_PER_BATCH: 4
   BASE_LR: 0.01

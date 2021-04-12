@@ -6,7 +6,7 @@ from detectron2.utils import env
 from detectron2.layers.batch_norm import NaiveSyncBatchNorm
 
 class MyConvBlock(nn.Module):
-    def __init__(self, in_channels, out_channels=None, norm=True, activation=False, kernel_size=3, stride=1):
+    def __init__(self, in_channels, out_channels=None, norm=True, activation=False, kernel_size=3, stride=1,sync_bn=True):
         super().__init__()
         out_channels = out_channels or in_channels
         if kernel_size == 3:
@@ -17,7 +17,10 @@ class MyConvBlock(nn.Module):
             raise NotImplementedError
         self.norm = norm
         if self.norm:
-            SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
+            if sync_bn:
+                SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
+            else:
+                SyncBN = nn.BatchNorm2d
             self.bn = SyncBN(num_features=out_channels)
         self.activation = activation
 
@@ -30,7 +33,7 @@ class MyConvBlock(nn.Module):
         return x
 
 class MySepConvBlock(nn.Module):
-    def __init__(self, in_channels, out_channels=None, norm=True, activation=False):
+    def __init__(self, in_channels, out_channels=None, norm=True, activation=False,sync_bn=True):
         super().__init__()
         out_channels = out_channels or in_channels
         # self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
@@ -38,7 +41,10 @@ class MySepConvBlock(nn.Module):
         self.pointwise_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, groups=1, bias=True)
         self.norm = norm
         if self.norm:
-            SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
+            if sync_bn:
+                SyncBN = NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm
+            else:
+                SyncBN = nn.BatchNorm2d
             self.bn = SyncBN(num_features=out_channels)
         self.activation = activation
 
