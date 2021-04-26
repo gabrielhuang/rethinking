@@ -36,6 +36,10 @@ from detectron2.modeling.meta_arch import GeneralizedRCNN
 from detectron2.modeling import GeneralizedRCNNWithTTA, DatasetMapperTTA
 from tsp_rcnn.my_fast_rcnn_output import fast_rcnn_inference_single_image
 
+# Register PASCAL datasets
+from tsp_rcnn.fsdet_data.builtin import register_all_pascal_voc
+#register_all_pascal_voc()
+
 class HybridOptimizer(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, dampening=0, betas=(0.9, 0.999), eps=1e-8, weight_decay=1e-4):
         defaults = dict(lr=lr, momentum=momentum, dampening=dampening,

@@ -85,7 +85,7 @@ def fast_rcnn_inference_single_image(
     filter_mask = scores > score_thresh  # R x K
     # R' x 2. First column contains indices of the R predictions;
     # Second column contains indices of classes.
-    filter_inds = filter_mask.nonzero()
+    filter_inds = filter_mask.nonzero(as_tuple=False)
     if num_bbox_reg_classes == 1:
         boxes = boxes[filter_inds[:, 0], 0]
     else:
@@ -183,7 +183,7 @@ def detr_fast_rcnn_inference_single_image(
     # R x K
     # R' x 2. First column contains indices of the R predictions;
     # Second column contains indices of classes.
-    filter_inds = filter_mask.nonzero()
+    filter_inds = filter_mask.nonzero(as_tuple=False)
     if num_bbox_reg_classes == 1:
         boxes = boxes[filter_inds[:, 0], 0]
     else:
@@ -337,13 +337,13 @@ class MyFastRCNNOutputs(object):
         bg_class_ind = self.pred_class_logits.shape[1] - 1
 
         fg_inds = (self.gt_classes >= 0) & (self.gt_classes < bg_class_ind)
-        num_fg = fg_inds.nonzero().numel()
+        num_fg = fg_inds.nonzero(as_tuple=False).numel()
         fg_gt_classes = self.gt_classes[fg_inds]
         fg_pred_classes = pred_classes[fg_inds]
 
-        num_false_negative = (fg_pred_classes == bg_class_ind).nonzero().numel()
-        num_accurate = (pred_classes == self.gt_classes).nonzero().numel()
-        fg_num_accurate = (fg_pred_classes == fg_gt_classes).nonzero().numel()
+        num_false_negative = (fg_pred_classes == bg_class_ind).nonzero(as_tuple=False).numel()
+        num_accurate = (pred_classes == self.gt_classes).nonzero(as_tuple=False).numel()
+        fg_num_accurate = (fg_pred_classes == fg_gt_classes).nonzero(as_tuple=False).numel()
 
         storage = get_event_storage()
         if num_instances > 0:
@@ -598,8 +598,8 @@ class MyFastRCNNOutputs(object):
                 if len(nonzero_tuple(true_fg_inds)[0]) == 0:
                     return 0.0 * self.pred_obj_logits.sum(), true_fg_inds
 
-                num_fg = true_fg_inds.nonzero().numel()
-                num_accurate = (pred_objs == adjusted_targets).nonzero().numel()
+                num_fg = true_fg_inds.nonzero(as_tuple=False).numel()
+                num_accurate = (pred_objs == adjusted_targets).nonzero(as_tuple=False).numel()
             else:
                 pred_classes = self.pred_class_logits.argmax(dim=1)
                 bg_class_ind = self.pred_class_logits.shape[1] - 1
@@ -607,13 +607,13 @@ class MyFastRCNNOutputs(object):
                 if len(nonzero_tuple(true_fg_inds)[0]) == 0:
                     return 0.0 * self.pred_class_logits.sum(), true_fg_inds
 
-                num_fg = true_fg_inds.nonzero().numel()
+                num_fg = true_fg_inds.nonzero(as_tuple=False).numel()
                 fg_gt_classes = adjusted_targets[true_fg_inds]
                 fg_pred_classes = pred_classes[true_fg_inds]
 
-                num_false_negative = (fg_pred_classes == bg_class_ind).nonzero().numel()
-                num_accurate = (pred_classes == adjusted_targets).nonzero().numel()
-                fg_num_accurate = (fg_pred_classes == fg_gt_classes).nonzero().numel()
+                num_false_negative = (fg_pred_classes == bg_class_ind).nonzero(as_tuple=False).numel()
+                num_accurate = (pred_classes == adjusted_targets).nonzero(as_tuple=False).numel()
+                fg_num_accurate = (fg_pred_classes == fg_gt_classes).nonzero(as_tuple=False).numel()
 
             empty_weight = torch.ones(self.gt_classes.shape[0], device=self.pred_class_logits.device)
             empty_weight[~true_fg_inds] = self.eos_weight
