@@ -24,11 +24,11 @@ MODEL:
   SYNC_BN: False  # because single GPU
 SOLVER:
   IMS_PER_BATCH: 32
-  BASE_LR: 0.02
+  BASE_LR: 0.04
   TRANSFORMER_MULTIPLIER: 0.003
   STEPS: (12000, 16000)  # this was for batch size 32
   MAX_ITER: 18000
-  WARMUP_ITERS: 100
+  # WARMUP_ITERS is 1000 by default
 DATASETS:
   TRAIN: ('voc_2007_trainval', 'voc_2012_trainval')
   TEST: ('voc_2007_test',)
