@@ -1,0 +1,26 @@
+_BASE_: "pascal_troi.yaml"
+MODEL:
+  #WEIGHTS: "checkpoints/voc/faster_rcnn/faster_rcnn_R_101_FPN_base1/model_reset_surgery.pth"
+  WEIGHTS: "outputs/voc_base1/model_final.pth"
+  #ROI_HEADS:
+  #  NUM_CLASSES: 20
+  #  OUTPUT_LAYER: "CosineSimOutputLayers"
+  #  FREEZE_FEAT: True
+  #BACKBONE:
+    #FREEZE: True  # re-add this
+  #PROPOSAL_GENERATOR:
+    #FREEZE: True  # TODO: readd this again
+#INPUT:
+#  MIN_SIZE_TRAIN: (480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800)
+#  MIN_SIZE_TEST: 800
+DATASETS:
+  TRAIN: ('voc_2007_trainval_alll1_10shot',)
+  TEST: ('voc_2007_test_all1',)
+SOLVER:
+  #IMS_PER_BATCH: 
+  BASE_LR: 0.001  # in fsdet base=0.02 novel=0.001 so we take 0.04 / 8
+  STEPS: (3000,)
+  MAX_ITER: 4000
+  CHECKPOINT_PERIOD: 500
+  WARMUP_ITERS: 0
+OUTPUT_DIR: "outputs/faster_rcnn_R_101_FPN_ft_normalized_all1_10shot_randnovel"

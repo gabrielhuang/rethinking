@@ -15,6 +15,7 @@ MODEL:
     RANDOM_PROPOSAL_DROP: True
     RANDOM_PROPOSAL_DROP_LOWER_BOUND: 0.7
     USE_OBJ_LOSS: True
+    USE_COSINE: True  # use cosine similarity instead of Linear layer
   ROI_HEADS:
     BATCH_SIZE_PER_IMAGE: 800
     NMS_THRESH_TEST: 0.7

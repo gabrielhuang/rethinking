@@ -693,6 +693,23 @@ class MyFastRCNNOutputs(object):
         return ret
 
 
+class CosineLayer(nn.Linear):
+    def __init__(self, input, output, epsilon=1e-8):
+        nn.Linear.__init__(self, input, output)
+        self.scaling = nn.Parameter(torch.FloatTensor([0.]))
+        self.epsilon = epsilon
+
+    def forward(self, x):
+        dot = x.matmul(self.weight.t())
+        x_norm = x.norm(dim=-1)
+        w_norm = self.weight.norm(dim=-1)
+        div = torch.outer(x_norm, w_norm)
+        cosine = dot / torch.clamp(div, min=self.epsilon)
+        logits = self.scaling.exp() * cosine
+        return logits
+
+    
+
 class MyFastRCNNOutputLayers(nn.Module):
     """
     Two linear layers for predicting Fast R-CNN outputs:
@@ -727,6 +744,7 @@ class MyFastRCNNOutputLayers(nn.Module):
         detr_eval_protocol: bool = False,
         separate_obj_cls: bool = False,
         use_detr_loss: bool = False,
+        use_cosine: bool = False
     ):
         """
         NOTE: this interface is experimental.
@@ -751,7 +769,10 @@ class MyFastRCNNOutputLayers(nn.Module):
             input_shape = ShapeSpec(channels=input_shape)
         input_size = input_shape.channels * (input_shape.width or 1) * (input_shape.height or 1)
         # prediction layer for num_classes foreground classes and one background class (hence + 1)
-        self.cls_score = Linear(input_size, num_classes + 1)
+        if use_cosine:
+            self.cls_score = CosineLayer(input_size, num_classes + 1)
+        else:
+            self.cls_score = Linear(input_size, num_classes + 1)
         nn.init.normal_(self.cls_score.weight, std=0.01)
         nn.init.constant_(self.cls_score.bias, 0)
 
@@ -827,6 +848,7 @@ class MyFastRCNNOutputLayers(nn.Module):
             "separate_obj_cls": cfg.MODEL.ROI_BOX_HEAD.SEPARATE_OBJ_CLS,
             "use_detr_loss": cfg.MODEL.ROI_BOX_HEAD.USE_DETR_LOSS,
             # fmt: on
+            "use_cosine": cfg.MODEL.ROI_BOX_HEAD.USE_COSINE,
         }
 
     def forward(self, x):

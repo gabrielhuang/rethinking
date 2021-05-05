@@ -385,6 +385,14 @@ def main(args):
     # if cfg.MODEL.WEIGHTS.startswith("detectron2://ImageNetPretrained"):
     trainer = Trainer(cfg)
     trainer.resume_or_load(resume=args.resume)
+
+    # Few-shot: reset parameters (if not resuming)
+    if cfg.MODEL.REINITIALIZE_BOX_PREDICTOR:
+        assert args.resume == False, "few-shot does not support resuming"
+        print('Reinitializing output box predictor')
+        trainer.model.roi_heads.box_predictor.cls_score.reset_parameters()
+        trainer.model.roi_heads.box_predictor.bbox_pred.layers[-1].reset_parameters()
+
     return trainer.train()
 
 

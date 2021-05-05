@@ -8,6 +8,8 @@ def add_troi_config(cfg):
     Add config for Transformer-ROI.
     """
     cfg.MODEL.SYNC_BN = True  # Deactivate SyncBatchNorm with single GPU
+    cfg.MODEL.REINITIALIZE_BOX_PREDICTOR = False
+    cfg.MODEL.ROI_BOX_HEAD.USE_COSINE = False
 
     cfg.MODEL.RPN.NUM_CONV = 1
     cfg.MODEL.FPN.NUM_REPEATS = 2
