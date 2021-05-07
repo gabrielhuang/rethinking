@@ -279,7 +279,7 @@ class TransformerROIHeads(ROIHeads):
         return instances
 
     def _forward_box(
-        self, features: Dict[str, torch.Tensor], proposals: List[Instances], targets=None
+        self, features: Dict[str, torch.Tensor], proposals: List[Instances], targets=None, return_box_features: bool=False
     ) -> Union[Dict[str, torch.Tensor], List[Instances]]:
         """
         Forward logic of the box prediction branch. If `self.train_on_pred_boxes is True`,
@@ -348,7 +348,10 @@ class TransformerROIHeads(ROIHeads):
                     )
                     for proposals_per_image, pred_boxes_per_image in zip(proposals, pred_boxes):
                         proposals_per_image.proposal_boxes = Boxes(pred_boxes_per_image)
-            return losses
+            if return_box_features:
+                return losses, box_features
+            else:
+                return losses
         else:
             pred_instances, _ = self.box_predictor.inference(predictions, proposals)
             return pred_instances

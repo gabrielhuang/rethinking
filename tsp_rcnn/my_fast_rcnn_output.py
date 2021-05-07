@@ -695,7 +695,7 @@ class MyFastRCNNOutputs(object):
 
 class CosineLayer(nn.Linear):
     def __init__(self, input, output, epsilon=1e-8):
-        nn.Linear.__init__(self, input, output)
+        nn.Linear.__init__(self, input, output, bias=False)
         self.scaling = nn.Parameter(torch.FloatTensor([0.]))
         self.epsilon = epsilon
 
@@ -771,10 +771,11 @@ class MyFastRCNNOutputLayers(nn.Module):
         # prediction layer for num_classes foreground classes and one background class (hence + 1)
         if use_cosine:
             self.cls_score = CosineLayer(input_size, num_classes + 1)
+            nn.init.normal_(self.cls_score.weight, std=0.01)
         else:
             self.cls_score = Linear(input_size, num_classes + 1)
-        nn.init.normal_(self.cls_score.weight, std=0.01)
-        nn.init.constant_(self.cls_score.bias, 0)
+            nn.init.normal_(self.cls_score.weight, std=0.01)
+            nn.init.constant_(self.cls_score.bias, 0)
 
         num_bbox_reg_classes = 1 if cls_agnostic_bbox_reg else num_classes
         box_dim = len(box2box_transform.weights)

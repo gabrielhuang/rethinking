@@ -1,4 +1,4 @@
-_BASE_: "RCNN-FPN-TROI-DEC-1x.yaml"
+_BASE_: "../RCNN-FPN-TROI-DEC-1x.yaml"
 MODEL:
   BACKBONE:
     NAME: "build_resnet_myfpn_backbone_v2"
@@ -33,4 +33,4 @@ SOLVER:
 DATASETS:
   TRAIN: ('voc_2007_trainval', 'voc_2012_trainval')
   TEST: ('voc_2007_test',)
-OUTPUT_DIR: "outputs/voc_all"
+OUTPUT_DIR: "outputs/PascalVOC-detection/TROI_R_50_FPN.yaml"

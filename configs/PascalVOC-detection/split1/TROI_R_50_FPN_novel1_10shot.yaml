@@ -1,7 +1,6 @@
 _BASE_: "pascal_troi.yaml"
 MODEL:
-  #WEIGHTS: "checkpoints/voc/faster_rcnn/faster_rcnn_R_101_FPN_base1/model_reset_surgery.pth"
-  WEIGHTS: "outputs/voc_base1/model_final.pth"
+  WEIGHTS: "outputs/PascalVOC-detection/split1/TROI_R_50_FPN_base1/model_final.pth"
   REINITIALIZE_BOX_PREDICTOR: True
   #ROI_HEADS:
   #  NUM_CLASSES: 20

@@ -1,4 +1,4 @@
-_BASE_: "pascal_troi.yaml"
+_BASE_: "TROI_R_50_FPN.yaml"
 MODEL:
   #WEIGHTS: "checkpoints/voc/faster_rcnn/faster_rcnn_R_101_FPN_base1/model_reset_surgery.pth"
   WEIGHTS: "outputs/voc_base1/model_final.pth"

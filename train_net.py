@@ -12,6 +12,7 @@ import torch
 import time
 import math
 import logging
+from collections import defaultdict
 
 
 import pickle
@@ -28,6 +29,7 @@ from detectron2.evaluation import COCOEvaluator
 from detectron2.solver.build import maybe_add_gradient_clipping
 from tsp_rcnn import add_troi_config, DetrDatasetMapper
 from tsp_fcos import add_fcos_config
+from detectron2.utils.events import EventStorage
 
 from detectron2.utils.logger import setup_logger
 import detectron2.utils.comm as comm
@@ -157,6 +159,13 @@ class AdetCheckpointer(DetectionCheckpointer):
         if "lpf" in basename or "dla" in basename:
             loaded["matching_heuristics"] = True
         return loaded
+
+
+def append_gt_as_proposal(gt_instances):
+    for instances in gt_instances:
+        instances.proposal_boxes = instances.gt_boxes
+        instances.gt_idxs = torch.arange(len(instances.gt_boxes))
+    return gt_instances
 
 
 class Trainer(DefaultTrainer):
@@ -294,6 +303,51 @@ class Trainer(DefaultTrainer):
         res = OrderedDict({k + "_TTA": v for k, v in res.items()})
         return res
 
+    def initialize_from_support(trainer_self):
+
+        class_means = defaultdict(list)
+        class_activations = defaultdict(list)
+
+        print('Computing support set centroids')
+
+        # Make sure this doesn't break on multigpu
+        # Disable default Collate function
+        support_loader = torch.utils.data.DataLoader(trainer_self.data_loader.dataset.dataset, batch_size=trainer_self.data_loader.batch_size, shuffle=False, num_workers=4, collate_fn=lambda x:x)
+
+        with EventStorage() as storage:
+
+            for i, batched_inputs in enumerate(support_loader):
+            #for i, batched_inputs in enumerate(trainer_self.data_loader):
+
+                print('Processed {} batches'.format(i))
+
+                self = trainer_self.model
+                images = self.preprocess_image(batched_inputs)
+                gt_instances = [x["instances"].to(self.device) for x in batched_inputs]
+                features = self.backbone(images.tensor)
+
+                proposals, proposal_losses = self.proposal_generator(images, features, gt_instances)
+                proposals = self.roi_heads.label_and_sample_proposals(proposals, gt_instances)
+                # Average box deatures here
+                gt_as_proposals = append_gt_as_proposal(gt_instances)
+                losses, box_features = self.roi_heads._forward_box(features, gt_as_proposals, gt_instances, return_box_features=True)
+
+                box_features_idx = 0
+                for instances in gt_as_proposals:
+                    for gt_class in instances.gt_classes:
+                        category_id = gt_class.item()
+                        activation = box_features[box_features_idx]
+                        class_activations[category_id].append(activation.detach().cpu())
+                        box_features_idx += 1
+
+        for category_id in class_activations:
+            class_activations[category_id] = torch.stack(class_activations[category_id])
+            class_means[category_id] = class_activations[category_id].mean(dim=0)
+            print('Category: #{}, shape: {}'.format(category_id, class_activations[category_id].size()))
+
+        pass
+
+
 
 class MyGeneralizedRCNNWithTTA(GeneralizedRCNNWithTTA):
     def __init__(self, cfg, model, tta_mapper=None, batch_size=3):
@@ -392,6 +446,9 @@ def main(args):
         print('Reinitializing output box predictor')
         trainer.model.roi_heads.box_predictor.cls_score.reset_parameters()
         trainer.model.roi_heads.box_predictor.bbox_pred.layers[-1].reset_parameters()
+
+        # Few-shot: initialize cls_score weights to average of support set
+        trainer.initialize_from_support()
 
     return trainer.train()
 
