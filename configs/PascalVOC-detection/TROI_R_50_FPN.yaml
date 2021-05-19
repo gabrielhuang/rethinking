@@ -24,7 +24,7 @@ MODEL:
     DIM_FEEDFORWARD: 2048
   SYNC_BN: False  # because single GPU
 SOLVER:
-  IMS_PER_BATCH: 32
+  IMS_PER_BATCH: 16
   BASE_LR: 0.04
   TRANSFORMER_MULTIPLIER: 0.003
   STEPS: (12000, 16000)  # this was for batch size 32
@@ -33,4 +33,4 @@ SOLVER:
 DATASETS:
   TRAIN: ('voc_2007_trainval', 'voc_2012_trainval')
   TEST: ('voc_2007_test',)
-OUTPUT_DIR: "outputs/PascalVOC-detection/TROI_R_50_FPN.yaml"
+OUTPUT_DIR: "outputs/PascalVOC-detection/TROI_R_50_FPN"

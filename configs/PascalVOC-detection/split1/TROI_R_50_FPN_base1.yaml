@@ -1,4 +1,7 @@
 _BASE_: "../TROI_R_50_FPN.yaml"
+MODEL:
+  ROI_HEADS:
+    NUM_CLASSES: 15
 DATASETS:
   TRAIN: ('voc_2007_trainval_base1', 'voc_2012_trainval_base1')
   TEST: ('voc_2007_test_base1',)
